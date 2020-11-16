@@ -6,12 +6,18 @@ const jwt = require('jsonwebtoken');
 const admin = require('./models/admin');
 const student = require('./models/student');
 const course = require('./models/course');
-// const admin = require('./models/admin');
+const studentcourse = require('./models/student-course');
+
 const isAuth = require('./middleware/is-auth');
+
+student.hasMany(studentcourse);
+studentcourse.belongsTo(student,{constraints:true,onDelete:'CASCADE'});
+studentcourse.belongsTo(course,{constraints:true,onDelete:'CASCADE'});
+
 
 const studentroutes = require('./routes/student');
 // app.use(bodyparser.urlencoded({extended:true}));
-// admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE01',password:'sreelal'}).then(r=>console.log(r)).catch(err=>console.log(err));
+admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE01',password:'sreelal'}).then(r=>console.log(r)).catch(err=>console.log(err));
 
 app.use(bodyparser.json());
 

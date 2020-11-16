@@ -8,22 +8,17 @@ const studentcourse = sequelize.define('studentcourse',{
         type: Sequelize.INTEGER,
         allowNull:false,
         primaryKey:true,
+        autoIncrement:true
         
 
     },
-    username: {
-        type:Sequelize.STRING,
-        allowNull:false
-    },
+   
     semester: {
         type:Sequelize.STRING,
         allowNull:false
 
     },
-    courseid: {
-        type:Sequelize.STRING,
-        allowNull:false
-    },
+    
     coursename: {
         type:Sequelize.STRING,
         allowNull:false

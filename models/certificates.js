@@ -8,6 +8,7 @@ const certificates = sequelize.define('certificate',{
         type: Sequelize.INTEGER,
         allowNull:false,
         primaryKey:true,
+        autoIncrement:true
         
 
     },
