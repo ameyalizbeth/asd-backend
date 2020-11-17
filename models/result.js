@@ -8,6 +8,7 @@ const result = sequelize.define('result',{
         type: Sequelize.INTEGER,
         allowNull:false,
         primaryKey:true,
+        autoIncrement:true
         
 
     },

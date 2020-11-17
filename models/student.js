@@ -22,6 +22,9 @@ const student = sequelize.define('student',{
     name: {
         type:Sequelize.STRING,
     },
+    department: {
+        type:Sequelize.STRING,
+    },
     currentsem: {
         type:Sequelize.STRING
 
