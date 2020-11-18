@@ -1,5 +1,7 @@
 const express= require('express');
 const bodyparser = require('body-parser');
+const Sequelize = require('sequelize');
+const Op=Sequelize.Op;
 const sequelize = require('./util/database');
 const app = express();
 const jwt = require('jsonwebtoken');
@@ -7,8 +9,11 @@ const admin = require('./models/admin');
 const student = require('./models/student');
 const course = require('./models/course');
 const studentcourse = require('./models/student-course');
+const notification = require('./models/notification');
 
 const isAuth = require('./middleware/is-auth');
+admin.hasMany(notification);
+notification.belongsTo(admin,{constraints:true,onDelete:'CASCADE'});
 
 student.hasMany(studentcourse);
 studentcourse.belongsTo(student,{constraints:true,onDelete:'CASCADE'});
@@ -65,10 +70,84 @@ app.get('/students',isAuth,(req,res)=>{
 
 });
 app.post('/students',isAuth,(req,res)=>{
-    // console.log(req.body.username);
-    // console.log(req.body.semester);
-    // console.log(req.body.department);
+    const username = req.body.username;
+    const semester =req.body.semester;
+    const department=req.body.department;
     const students=[];
+
+    if(semester == '' && department == ''){
+        student.findAll({where:{username:username}}).then(student=>{
+            // console.log(student);
+            student.map(e=>{
+                // console.log(e);
+                students.push(e.dataValues);
+     
+            })
+            res.status(200).json({students:students});
+        }).catch(err=>console.log(err));
+            
+
+    }
+    else if(semester=='' && username == ''){
+        student.findAll({where:{department:department}}).then(student=>{
+            // console.log(student);
+            student.map(e=>{
+                // console.log(e);
+                students.push(e.dataValues);
+     
+            })
+            res.status(200).json({students:students});
+        }).catch(err=>console.log(err));
+
+    }
+    else if(username=='' && department==''){
+        student.findAll({where:{currentsem:semester}}).then(student=>{
+            // console.log(student);
+            student.map(e=>{
+                // console.log(e);
+                students.push(e.dataValues);
+     
+            })
+            res.status(200).json({students:students});
+        }).catch(err=>console.log(err));
+
+    }
+    else if(semester==''){
+        student.findAll({where:{username:username,department:department}}).then(student=>{
+            // console.log(student);
+            student.map(e=>{
+                // console.log(e);
+                students.push(e.dataValues);
+     
+            })
+            res.status(200).json({students:students});
+        }).catch(err=>console.log(err));
+
+    }
+    else if(username==''){
+        student.findAll({where:{currentsem:semester,department:department}}).then(student=>{
+            // console.log(student);
+            student.map(e=>{
+                // console.log(e);
+                students.push(e.dataValues);
+     
+            })
+            res.status(200).json({students:students});
+        }).catch(err=>console.log(err));
+    }
+    else if(department==''){
+        student.findAll({where:{currentsem:semester,username:username}}).then(student=>{
+            // console.log(student);
+            student.map(e=>{
+                // console.log(e);
+                students.push(e.dataValues);
+     
+            })
+            res.status(200).json({students:students});
+        }).catch(err=>console.log(err));
+    }
+    else{
+   
     student.findAll({where:{username:req.body.username,currentsem:req.body.semester,department:req.body.department}}).then(student=>{
         // console.log(student);
         student.map(e=>{
@@ -79,7 +158,7 @@ app.post('/students',isAuth,(req,res)=>{
         res.status(200).json({students:students});
     }).catch(err=>console.log(err));
         
-
+}
 });
 
 
@@ -182,6 +261,69 @@ app.post('/login',(req,res)=>{
         }).catch(err=>console.log(err))
     // res.send(`hello${username}`);
 });
+
+app.post('/notification',isAuth,(req,res)=>{
+notification.create({header:req.body.header,body:req.body.body,adminUsername:req.userid}).then(r=>{
+    console.log(r);
+    res.status(200).send();
+}).catch(err=>{console.log(err)})
+
+});
+app.get('/notification',isAuth,(req,res)=>{
+    const notifications = [];
+    notification.findAll({where:{adminUsername:req.userid}})
+    .then(notification=>{
+        console.log(notification)
+        notification.map(e=>{
+            notifications.push(e.dataValues);
+        })
+        res.status(200).json({notifications:notifications});
+
+    }
+    ).catch(err=>{console.log(err)})
+    
+    });
+
+
+
+
+    app.get('/notifications',(req,res)=>{
+        const notifications = [];
+        
+        
+      notification.count().then(r=>{
+        if(r>5){
+            notification.findAll({where:{id:{
+                [Op.in]:[r,r-1,r-2,r-3,r-4]
+            }}}).then(notification=>{
+                console.log(notification)
+                notification.map(e=>{
+                    notifications.push(e.dataValues);
+                })
+                res.status(200).json({notifications:notifications});
+        
+            }).catch(err=>{console.log(err)})
+    
+        }
+        else{
+            notification.findAll()
+            .then(notification=>{
+                console.log(notification)
+                notification.map(e=>{
+                    notifications.push(e.dataValues);
+                })
+                res.status(200).json({notifications:notifications});
+        
+            }).catch(err=>{console.log(err)})
+    
+
+        }
+       
+
+      }).catch(err=>console.log(err));
+       
+       
+        });
 
 app.use((error,req,res,next)=>{
     console.log(error);
