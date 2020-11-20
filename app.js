@@ -25,7 +25,7 @@ const studentroutes = require('./routes/student');
 
 app.use(bodyparser.json());
 
-admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE01',password:'sreelal'}).then(r=>console.log(r)).catch(err=>console.log(err));
+// admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE01',password:'sreelal'}).then(r=>console.log(r)).catch(err=>console.log(err));
 
 app.use(function(req,res,next){
     res.header("Acess-Control-Allow-Origin","*");
