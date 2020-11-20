@@ -29,7 +29,7 @@ admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE01',password
 
 app.use(function(req,res,next){
     res.header("Acess-Control-Allow-Origin","*");
-    res.header("Acess-Control-Allow-Headers","Origin,X-Requested-With,Content-Type,Accept,Authorization");
+    res.header("Acess-Control-Allow-Headers","Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
 
     res.header("Acess-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
     next();
