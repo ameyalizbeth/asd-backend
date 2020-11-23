@@ -48,7 +48,7 @@ app.use(bodyparser.json());
 app.use('/images',express.static(path.join(__dirname,'images')));
 app.use(multer({storage:filestorage,fileFilter:fileFilter}).single('data'));
 
-// admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE01',password:'sreelal'}).then(r=>console.log(r)).catch(err=>console.log(err));
+admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE02',password:'sreelal'}).then(r=>console.log(r)).catch(err=>console.log(err));
 
 app.use(function(req,res,next){
     res.header("Access-Control-Allow-Origin","*");
