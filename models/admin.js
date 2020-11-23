@@ -21,9 +21,6 @@ const admin = sequelize.define('admin',{
     },
     name: {
         type:Sequelize.STRING,
-    },
-    image:{
-        type:Sequelize.STRING
     }
 });
 
