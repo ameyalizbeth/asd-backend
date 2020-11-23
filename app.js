@@ -1,4 +1,6 @@
 const express= require('express');
+const fs= require('fs');
+const path= require('path');
 const bodyparser = require('body-parser');
 const Sequelize = require('sequelize');
 const Op=Sequelize.Op;
@@ -10,6 +12,25 @@ const student = require('./models/student');
 const course = require('./models/course');
 const studentcourse = require('./models/student-course');
 const notification = require('./models/notification');
+const multer = require('multer');
+const filestorage = multer.diskStorage({
+    destination:(req,file,cb)=>{
+        cb(null,'images');
+    },
+    filename:(req,file,cb)=>{
+        
+        cb(null, new Date().toISOString().replace(/:/g,'-')+'-'+file.originalname);
+    }
+});
+const fileFilter=(req,file,cb)=>{
+    if(file.mimetype == 'image/jpg' || file.mimetype =='image/png' || file.mimetype =='image/jpeg'){
+        cb(null,true);
+    }
+    else{
+        cb(null,false);
+    }
+
+}
 
 const isAuth = require('./middleware/is-auth');
 admin.hasMany(notification);
@@ -24,8 +45,10 @@ const studentroutes = require('./routes/student');
 // app.use(bodyparser.urlencoded({extended:true}));
 
 app.use(bodyparser.json());
+app.use('/images',express.static(path.join(__dirname,'images')));
+app.use(multer({storage:filestorage,fileFilter:fileFilter}).single('data'));
 
-admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE01',password:'sreelal'}).then(r=>console.log(r)).catch(err=>console.log(err));
+// admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE01',password:'sreelal'}).then(r=>console.log(r)).catch(err=>console.log(err));
 
 app.use(function(req,res,next){
     res.header("Acess-Control-Allow-Origin","*");
@@ -40,8 +63,35 @@ app.use('/student',studentroutes);
 app.get('/admin/:adminid',isAuth,(req,res)=>{
 
     admin.findByPk(req.params.adminid).then(user=>{
-        res.status(200).json({name:user.name,email:user.email});
+        res.status(200).json({name:user.name,email:user.email,path:user.image});
     }).catch(err=>{console.log(err)})
+
+});
+app.post('/admin/:adminid/images',isAuth,(req,res)=>{
+    admin.findByPk(req.params.adminid).then(user=>{
+        const p = user.image;
+        console.log(req.file);
+        user.update({image:req.file.path}).then(r=>{
+            res.status(200).json({path:req.file.path});
+            if(!p){
+            fs.unlink(p,function (err){
+                if(err) throw err;
+                console.log('file deleted');
+        })}
+
+
+        }).catch(err=>console.log(err)) ;
+        
+       
+           
+        }
+       
+       
+    ).catch(err=>{console.log(err)})
+
+
+
+    console.log(req.file);
 
 });
 app.get('/courses',isAuth,(req,res)=>{
