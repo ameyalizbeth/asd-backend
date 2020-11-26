@@ -16,14 +16,28 @@ routes.get('/:studentid',isAuth,(req,res)=>{
 
 routes.get('/:studentid/registercourses/:sem',isAuth,(req,res)=>{
     const courses = [];
+    const scourse = [];
 
-   course.findAll({where: {semester:req.params.sem}}).then(course=>{
-       course.map(e=>{
-           courses.push(e.dataValues);
+    studentcourse.findAll({where: {semester:req.params.sem,studentusername:req.params.studentid}}).then(studcourse=>{
+        if(!studcourse){
+            course.findAll({where: {semester:req.params.sem}}).then(course=>{
+                course.map(e=>{
+                    courses.push(e.dataValues);
+         
+                })
+                res.status(200).json({courses:courses});
+            }).catch(err=>console.log(err));
 
-       })
-       res.status(200).json({courses:courses});
-   }).catch(err=>console.log(err));
+        }
+        else{
+            studcourse.map(e=>{scourse,push(e.dataValues);})
+            res.status(200).json({scourse:scourse});
+
+
+        }
+
+    }).catch(err=>console.log(err));
+   
 
 });
 
