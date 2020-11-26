@@ -20,6 +20,7 @@ routes.get('/:studentid/registercourses/:sem',isAuth,(req,res)=>{
     const scourse = [];
 
     studentcourse.findAll({where: {semester:req.params.sem,studentusername:req.params.studentid}}).then(studcourse=>{
+        console.log(studcourse);
         if(!studcourse){
             course.findAll({where: {semester:req.params.sem}}).then(course=>{
                 course.map(e=>{
