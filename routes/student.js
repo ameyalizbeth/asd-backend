@@ -33,6 +33,7 @@ routes.get('/:studentid/registercourses/:sem',isAuth,(req,res)=>{
         }
         else{
             studcourse.map(e=>{scourse.push(e.dataValues);})
+            console.log(scourse);
             res.status(200).json({scourse:scourse});
 
 
