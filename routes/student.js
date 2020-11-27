@@ -46,6 +46,7 @@ routes.get('/:studentid/registercourses/:sem',isAuth,(req,res)=>{
 
 routes.post('/student-registered-courses',isAuth,(req,res)=>{
 const courses = req.body.courses.courses;
+    console.log(courses);
 var coursename;
 courses.map(e=>{
     course.findByPk(e).then(course=>{
