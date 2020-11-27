@@ -19,7 +19,7 @@ routes.get('/:studentid/registercourses/:sem',isAuth,(req,res)=>{
     const courses = [];
     const scourse = [];
 
-    studentcourse.findAll({where: {semester:req.params.sem,studentusername:req.params.studentid}}).then(studcourse=>{
+    studentcourse.findAll({where: {semester:req.params.sem,studentUsername:req.params.studentid}}).then(studcourse=>{
        
         if(studcourse.length==0){
             course.findAll({where: {semester:req.params.sem}}).then(course=>{
@@ -42,6 +42,23 @@ routes.get('/:studentid/registercourses/:sem',isAuth,(req,res)=>{
    
 
 });
+
+
+routes.post('/student-registered-courses',isAuth,(req,res)=>{
+const courses = req.body.courses;
+var coursename;
+courses.map(e=>{
+    course.findByPk(e).then(course=>{
+         coursename = course.coursename;
+    }).catch(err=>console.log(err));
+    studentcourse.create({semester:req.body.semester,coursename:coursename,studentUsername:req.body.username,courseCourseid:e}).then(r=>{
+        res.status(200).send();
+    }).catch(err=>console.log(err));
+});
+
+
+});
+
 
 
 
