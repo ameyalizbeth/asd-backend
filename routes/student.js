@@ -49,12 +49,15 @@ const courses = req.body.courses;
     console.log(courses);
 var coursename;
 courses.map(e=>{
+    console.log(e);
     course.findByPk(e).then(course=>{
          coursename = course.coursename;
-    }).catch(err=>console.log(err));
-    studentcourse.create({semester:req.body.semester,coursename:coursename,studentUsername:req.body.username,courseCourseid:e}).then(r=>{
+        console.log(coursename);
+         studentcourse.create({semester:req.body.semester,coursename:coursename,studentUsername:req.body.username,courseCourseid:e}).then(r=>{
         res.status(200).send();
     }).catch(err=>console.log(err));
+    }).catch(err=>console.log(err));
+   
 });
 
 
