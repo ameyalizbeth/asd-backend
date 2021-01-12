@@ -4,7 +4,7 @@ const student = require('../models/student');
 const studentcourse = require('../models/student-course');
 const course = require('../models/course');
 const routes = express.Router();
-
+const bcrypt = require('bcrypt');
 
 
 
@@ -22,6 +22,8 @@ routes.get('/:studentid',isAuth,(req,res,next)=>{
 });
 
 routes.post('/:studentid/changepassword',isAuth,(req,res,next)=>{
+     const salt = await bcrypt.genSalt();
+    const hashedpassword = await bcrypt.hash(req.body.password,salt);
     student.findByPk(req.params.studentid).then(user=>{
         user.update({password:req.body.password}).then(r=>{
             res.status(200).send();
