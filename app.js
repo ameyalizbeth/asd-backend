@@ -9,10 +9,15 @@ const app = express();
 const jwt = require('jsonwebtoken');
 const admin = require('./models/admin');
 const student = require('./models/student');
+const result = require('./models/result');
 const course = require('./models/course');
 const studentcourse = require('./models/student-course');
 const notification = require('./models/notification');
 const multer = require('multer');
+const readXlsxFile = require("read-excel-file/node");
+const bcrypt = require('bcrypt');
+
+
 const filestorage = multer.diskStorage({
     destination:(req,file,cb)=>{
         cb(null,'images');
@@ -32,6 +37,31 @@ const fileFilter=(req,file,cb)=>{
 
 }
 
+const excelFilter = (req, file, cb) => {
+    console.log(file);
+    if (
+      file.mimetype.includes("excel") ||
+      file.mimetype.includes("spreadsheetml") ||
+      file.mimetype.includes("application/octet-stream") 
+    
+    ) {
+      cb(null, true);
+    } else {
+      cb("Please upload only excel file.", false);
+    }
+  };
+  const  storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, 'results');
+    },
+    filename: (req, file, cb) => {
+
+      console.log(file.originalname);
+      cb(null, new Date().toISOString().replace(/:/g,'-')+'-'+file.originalname);
+      
+    },
+  });
+
 const isAuth = require('./middleware/is-auth');
 admin.hasMany(notification);
 notification.belongsTo(admin,{constraints:true,onDelete:'CASCADE'});
@@ -46,9 +76,10 @@ const studentroutes = require('./routes/student');
 
 app.use(bodyparser.json());
 app.use('/images',express.static(path.join(__dirname,'images')));
-app.use(multer({storage:filestorage,fileFilter:fileFilter}).single('data'));
-
-admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE03',password:'sreelal'}).then(r=>console.log(r)).catch(err=>console.log(err));
+// app.use('/images',express.static(path.join(__dirname,'results')));
+app.use('/result',multer({storage:storage,fileFilter:excelFilter}).single('resultdata'));
+app.use('/dp',multer({storage:filestorage,fileFilter:fileFilter}).single('data'));
+// admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE01',password:'sreelal'}).then(r=>console.log(r)).catch(err=>console.log(err));
 
 app.use(function(req,res,next){
     res.header("Access-Control-Allow-Origin","*");
@@ -60,14 +91,33 @@ app.use(function(req,res,next){
 });
    
 app.use('/student',studentroutes);
-app.get('/admin/:adminid',isAuth,(req,res)=>{
+app.get('/admin/:adminid',isAuth,(req,res,next)=>{
 
     admin.findByPk(req.params.adminid).then(user=>{
         res.status(200).json({name:user.name,email:user.email,path:user.image});
-    }).catch(err=>{console.log(err)})
+    }).catch(err=>{ err.statusCode = 500;
+        err.message = "error occured";
+        next(err);})
 
 });
-app.post('/admin/:adminid/images',isAuth,(req,res)=>{
+
+app.post('/admin/:adminid/changepassword',isAuth,(req,res,next)=>{
+    admin.findByPk(req.params.adminid).then(user=>{
+        user.update({password:req.body.password}).then(r=>{
+            res.status(200).send();
+        }).catch(err=>{
+            err.statusCode = 500;
+            err.message = "error occured";
+            next(err);
+        })
+    }).catch(err=>{
+        err.statusCode = 500;
+        err.message = "error occured";
+        next(err);
+    })
+})
+
+app.post('/dp/admin/:adminid/images',isAuth,(req,res,next)=>{
     admin.findByPk(req.params.adminid).then(user=>{
         const p = user.image;
         console.log(req.file);
@@ -80,21 +130,229 @@ app.post('/admin/:adminid/images',isAuth,(req,res)=>{
         })}
 
 
-        }).catch(err=>console.log(err)) ;
+        }).catch(err=>{
+            err.statusCode = 500;
+            err.message = "error occured";
+            next(err);
+        }) ;
         
        
            
         }
        
        
-    ).catch(err=>{console.log(err)})
+    ).catch(err=>{ 
+        err.statusCode = 500;
+        err.message = "error occured";
+        next(err);})
 
 
 
     console.log(req.file);
 
 });
-app.get('/courses',isAuth,(req,res)=>{
+
+
+
+app.post('/dp/student/:studentid/images',isAuth,(req,res,next)=>{
+    student.findByPk(req.params.studentid).then(user=>{
+        const p = user.image;
+        console.log(req.file);
+        user.update({image:req.file.path}).then(r=>{
+            res.status(200).json({path:req.file.path});
+            if(p){
+            fs.unlink(p,function (err){
+                if(err) throw err;
+                console.log('file deleted');
+        })}
+
+
+        }).catch(err=>{
+            err.statusCode = 500;
+            err.message = "error occured";
+            next(err);
+        }) ;
+        
+       
+           
+        }
+       
+       
+    ).catch(err=>{ 
+        err.statusCode = 500;
+        err.message = "error occured";
+        next(err);})
+
+
+
+    console.log(req.file);
+
+});
+
+app.post('/result/admin/:adminid/results',isAuth,async(req,res,next)=>{
+    try{
+        console.log(req.body.year);
+        if (req.file == undefined) {
+                return res.status(400).send("Please upload an excel file!");
+            }
+            // console.log(req.file);
+        
+            readXlsxFile('./results/'+req.file.filename).then((rows) => {
+                // skip header
+                rows.shift();
+          
+                let results = [];
+          
+                rows.forEach((row) => {
+                  let result = {
+                   
+                    
+                    username:row[1],
+                    courseid:row[2],
+                    coursename:row[3],
+                    semester:row[4],
+                    department:row[5],
+                    grade:row[6],
+                    year:row[7],
+                    monthandyear:row[8],
+                    credit:row[9],
+                    gpa:row[10],
+                   
+                  };
+          
+                  results.push(result);
+                });
+                result.findAll({where:{year:req.body.year,semester:req.body.sem}}).then(r=>{
+                    console.log(r.length);
+                    if(r.length==0){
+                        result.bulkCreate(results)
+                        .then((r) => {
+                          //   console.log(r);
+                          res.status(200).send({
+                            message: "Uploaded the file successfully: " + req.file.originalname,
+                          });
+                        })
+                        .catch((error) => {
+                          //   console.log(error);
+                          res.status(500).send({
+                            message: "Fail to import data into database!",
+                            error: error.message,
+                          });
+                        });
+                    }
+                    else{
+                        res.status(403).send("already published results");
+                    }
+
+                }).catch(err=>{
+                    err.statusCode = 500;
+                    err.message = "error occured";
+                    next(err);
+                });
+                
+              });
+            
+            
+        } catch(error){
+                
+            res.status(500).send({
+                message: "could not upload file",
+                error: error.message,
+              });
+        
+        }   
+
+    });
+
+
+app.post('/result/admin/:adminid/updateresults',isAuth,async(req,res,next)=>{
+    try{
+        if (req.file == undefined) {
+                return res.status(400).send("Please upload an excel file!");
+            }
+            console.log(req);
+        
+            readXlsxFile('./results/'+req.file.filename).then((rows) => {
+                // skip header
+                rows.shift();
+          
+                let results = [];
+          
+                rows.forEach((row) => {
+                  let result = {
+                   
+                    
+                    username:row[1],
+                    courseid:row[2],
+                    coursename:row[3],
+                    semester:row[4],
+                    department:row[5],
+                    grade:row[6],
+                    year:row[7],
+                    monthandyear:row[8],
+                    credit:row[9],
+                    gpa:row[10],
+                   
+                  };
+          
+                  results.push(result);
+                });
+                results.map(r=>{
+                    result.update(
+                        {grade:r.grade,gpa:r.gpa},
+                        {where:{username:r.username,courseid:r.courseid,coursename:r.coursename,semester:r.semester,year:r.year},
+                        returning:true,plain:true})
+                       .then(r=>{
+                                console.log("succesfull");
+                            })
+                            .catch(err=>{
+                                console.log(err);
+                            })
+
+                    })
+
+                    result.update({gpa:r.gpa},{where:{username:r.username,semester:r.semester,year:r.year},returning:true,plain:true}).then(r=>{
+                        console.log("succesfull");
+                    })
+                    .catch(err=>{
+                        console.log(err);
+                    })
+                }).catch(err=>{
+                            console.log(err);
+                            res.status(500).send({
+                                      message: "Fail to import data into database!",
+                                      error: error.message,
+                                    });
+                        });
+                
+                // // result.bulkCreate(results)
+                // //   .then((r) => {
+                // //       console.log(r);
+                // //     res.status(200).send({
+                // //       message: "Uploaded the file successfully: " + req.file.originalname,
+                // //     });
+                // //   })
+                // //   .catch((error) => {
+                // //       console.log(error);
+                // //     res.status(500).send({
+                // //       message: "Fail to import data into database!",
+                // //       error: error.message,
+                // //     });
+                //   });
+              
+            } catch (error) {
+              console.log(error);
+              res.status(500).send({
+                message: "Could not upload the file: " + req.file.originalname,
+              });
+            }
+        
+            
+
+});
+
+
+app.get('/courses',isAuth,(req,res,next)=>{
     const courses=[];
     course.findAll().then(course=>{
         course.map(e=>{
@@ -102,12 +360,16 @@ app.get('/courses',isAuth,(req,res)=>{
  
         })
         res.status(200).json({courses:courses});
-    }).catch(err=>console.log(err));
+    }).catch(err=>{
+        err.statusCode = 500;
+        err.message = "error occured";
+        next(err);
+    });
         
 
 });
 
-app.get('/students',isAuth,(req,res)=>{
+app.get('/students',isAuth,(req,res,next)=>{
     const username=[];
     student.findAll().then(student=>{
         student.map(e=>{
@@ -115,11 +377,15 @@ app.get('/students',isAuth,(req,res)=>{
  
         })
         res.status(200).json({username:username});
-    }).catch(err=>console.log(err));
+    }).catch(err=>{
+        err.statusCode = 500;
+        err.message = "error occured";
+        next(err);
+    });
         
 
 });
-app.post('/students',isAuth,(req,res)=>{
+app.post('/students',isAuth,(req,res,next)=>{
     const username = req.body.username;
     const semester =req.body.semester;
     const department=req.body.department;
@@ -134,7 +400,11 @@ app.post('/students',isAuth,(req,res)=>{
      
             })
             res.status(200).json({students:students});
-        }).catch(err=>console.log(err));
+        }).catch(err=>{
+            err.statusCode = 500;
+            err.message = "error occured";
+            next(err);
+        });
             
 
     }
@@ -147,7 +417,11 @@ app.post('/students',isAuth,(req,res)=>{
      
             })
             res.status(200).json({students:students});
-        }).catch(err=>console.log(err));
+        }).catch(err=>{
+            err.statusCode = 500;
+            err.message = "error occured";
+            next(err);
+        });
 
     }
     else if(username=='' && department==''){
@@ -159,7 +433,11 @@ app.post('/students',isAuth,(req,res)=>{
      
             })
             res.status(200).json({students:students});
-        }).catch(err=>console.log(err));
+        }).catch(err=>{
+            err.statusCode = 500;
+            err.message = "error occured";
+            next(err);
+        });
 
     }
     else if(semester==''){
@@ -171,7 +449,11 @@ app.post('/students',isAuth,(req,res)=>{
      
             })
             res.status(200).json({students:students});
-        }).catch(err=>console.log(err));
+        }).catch(err=>{
+            err.statusCode = 500;
+            err.message = "error occured";
+            next(err);
+        });
 
     }
     else if(username==''){
@@ -183,7 +465,11 @@ app.post('/students',isAuth,(req,res)=>{
      
             })
             res.status(200).json({students:students});
-        }).catch(err=>console.log(err));
+        }).catch(err=>{
+            err.statusCode = 500;
+            err.message = "error occured";
+            next(err);
+        });
     }
     else if(department==''){
         student.findAll({where:{currentsem:semester,username:username}}).then(student=>{
@@ -194,7 +480,11 @@ app.post('/students',isAuth,(req,res)=>{
      
             })
             res.status(200).json({students:students});
-        }).catch(err=>console.log(err));
+        }).catch(err=>{
+            err.statusCode = 500;
+            err.message = "error occured";
+            next(err);
+        });
     }
     else{
    
@@ -206,22 +496,28 @@ app.post('/students',isAuth,(req,res)=>{
  
         })
         res.status(200).json({students:students});
-    }).catch(err=>console.log(err));
+    }).catch(err=>{
+        err.statusCode = 500;
+        err.message = "error occured";
+        next(err);
+    });
         
 }
 });
 
 
-app.post('/register',isAuth,(req,res,next)=>{
+app.post('/register',isAuth,async(req,res,next)=>{
+    const salt = await bcrypt.genSalt();
+    const hashedpassword = await bcrypt.hash(req.body.password,salt);
 const name = req.body.name;
 const email = req.body.email;
 const username = req.body.username;
-const password = req.body.password;
+
 const currentsem = req.body.currentsem;
 const department = req.body.department;
 
 if(req.body.currentuser === req.userid){
-student.create({name:name,email:email,username:username,password:password,currentsem:currentsem,department:department}).then(r=>res.status(200).json({message:"registered succesfully"})).catch(err=>{
+student.create({name:name,email:email,username:username,password:hashedpassword,currentsem:currentsem,department:department}).then(r=>res.status(200).json({message:"registered succesfully"})).catch(err=>{
   err.statusCode = 403;
   err.message = "student already registered";
   next(err);
@@ -254,7 +550,7 @@ app.post('/registercourses',isAuth,(req,res,next)=>{
     }
     
     });
-app.post('/login',(req,res)=>{
+app.post('/login',(req,res,next)=>{
     const username = req.body.username;
     const password = req.body.password;
     // res.redirect('/');
@@ -287,39 +583,62 @@ app.post('/login',(req,res)=>{
                     loadeduser=user;
                     status = 'student';
                     if(user){
-                   if(user.password === password){
+                    bcrypt.compare(password,user.password).then(ismatch=>{
+                        console.log(ismatch);
+                        if(ismatch){
+                            const token = jwt.sign(
+                                {
+                                    userid:loadeduser.username
+             
+                                },
+                                'somesupersecretsecre',
+                                {expiresIn:'4h'});
+                            
+                          res.status(200).json({token:token,userid:loadeduser.username,status:status});
+
+                        }
+                        else{
+                            res.status(401).send({status:401});
+                
+
+                        }
+                    }).catch(err=>{
+                        err.statusCode = 500;
+                err.message = "internal server error";
+                console.log(err);
+                next(err);
+
+                    })
         
-                       const token = jwt.sign(
-                           {
-                               userid:loadeduser.username
-        
-                           },
-                           'somesupersecretsecre',
-                           {expiresIn:'2h'});
-                       
-                     res.status(200).json({token:token,userid:loadeduser.username,status:status});
+                      
         
                    }
-                else{
-                    res.status(401).send({status:401});
-                }}
+               
                 else{
                res.status(404).send({status:404});
                 }
-            }).catch(err=>console.log(err))
+            }).catch(err=>{
+                
+            })
            }
-        }).catch(err=>console.log(err))
+        }).catch(err=>{
+            err.statusCode = 500;
+            err.message = "error occured";
+            next(err);
+        })
     // res.send(`hello${username}`);
 });
 
-app.post('/notification',isAuth,(req,res)=>{
+app.post('/notification',isAuth,(req,res,next)=>{
 notification.create({header:req.body.header,body:req.body.body,adminUsername:req.userid}).then(r=>{
     console.log(r);
     res.status(200).send();
-}).catch(err=>{console.log(err)})
+}).catch(err=>{ err.statusCode = 500;
+    err.message = "couldnt create notification";
+    next(err);})
 
 });
-app.get('/notification',isAuth,(req,res)=>{
+app.get('/notification',isAuth,(req,res,next)=>{
     const notifications = [];
     notification.findAll({where:{adminUsername:req.userid}})
     .then(notification=>{
@@ -330,14 +649,16 @@ app.get('/notification',isAuth,(req,res)=>{
         res.status(200).json({notifications:notifications});
 
     }
-    ).catch(err=>{console.log(err)})
+    ).catch(err=>{ err.statusCode = 500;
+        err.message = "error occured";
+        next(err);})
     
     });
 
 
 
 
-    app.get('/notifications',(req,res)=>{
+    app.get('/notifications',(req,res,next)=>{
         const notifications = [];
         
         
@@ -352,7 +673,9 @@ app.get('/notification',isAuth,(req,res)=>{
                 })
                 res.status(200).json({notifications:notifications});
         
-            }).catch(err=>{console.log(err)})
+            }).catch(err=>{ err.statusCode = 500;
+                err.message = "error occured";
+                next(err);})
     
         }
         else{
@@ -364,13 +687,21 @@ app.get('/notification',isAuth,(req,res)=>{
                 })
                 res.status(200).json({notifications:notifications});
         
-            }).catch(err=>{console.log(err)})
+            }).catch(err=>{
+                err.statusCode = 500;
+                err.message = "error in finding notification";
+                next(err);
+            })
     
 
         }
        
 
-      }).catch(err=>console.log(err));
+      }).catch(err=>{
+        err.statusCode = 500;
+        err.message = "error occured";
+        next(err);
+      });
        
        
         });
