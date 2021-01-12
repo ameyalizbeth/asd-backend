@@ -1,8 +1,6 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../util/database');
 
-
-
 const result = sequelize.define('result',{
     id: {
         type: Sequelize.INTEGER,
@@ -21,16 +19,37 @@ const result = sequelize.define('result',{
         allowNull:false
 
     },
-    semester: {
+    coursename:{
+        type:Sequelize.STRING,
+        allowNull:false
+    },
+    year:{
         type:Sequelize.INTEGER,
+        allowNull:false
+    },
+    monthandyear:{
+        type:Sequelize.STRING,
         allowNull:false
 
     },
-    marks: {
-        type:Sequelize.FLOAT,
+    semester: {
+        type:Sequelize.STRING,
+        allowNull:false
+
+    },
+    grade: {
+        type:Sequelize.STRING,
         allowNull:false
 
 
+    },
+    credit:{
+        type:Sequelize.FLOAT,
+        allowNull:false
+    },
+    gpa:{
+        type:Sequelize.FLOAT,
+        allowNull:false
     },
     department:{
         type:Sequelize.STRING,
@@ -39,5 +58,8 @@ const result = sequelize.define('result',{
 
     }
 });
+
+
+
 
 module.exports= result;
