@@ -97,6 +97,8 @@ console.log(courses);
 var coursename;
 courses.map(e=>{
     course.findByPk(e).then(course=>{
+        console.log(e);
+        console.log(course);
          coursename = course.coursename;
     }).catch(err=>{
         err.statusCode = 500;
