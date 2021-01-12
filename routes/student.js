@@ -21,7 +21,7 @@ routes.get('/:studentid',isAuth,(req,res,next)=>{
 
 });
 
-routes.post('/:studentid/changepassword',isAuth,(req,res,next)=>{
+routes.post('/:studentid/changepassword',isAuth,async(req,res,next)=>{
      const salt = await bcrypt.genSalt();
     const hashedpassword = await bcrypt.hash(req.body.password,salt);
     student.findByPk(req.params.studentid).then(user=>{
