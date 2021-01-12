@@ -153,15 +153,11 @@ app.post('/dp/admin/:adminid/images',isAuth,(req,res,next)=>{
 
 app.post('/dp/student/:studentid/images',isAuth,(req,res,next)=>{
     student.findByPk(req.params.studentid).then(user=>{
-        const p = user.image;
+//         const p = user.image;
         console.log(req.file);
         user.update({image:req.file.path}).then(r=>{
             res.status(200).json({path:req.file.path});
-            if(p){
-            fs.unlink(p,function (err){
-                if(err) throw err;
-                console.log('file deleted');
-        })}
+            
 
 
         }).catch(err=>{
