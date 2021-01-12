@@ -96,14 +96,14 @@ const courses = req.body.courses;
 console.log(courses);
 var coursename;
 courses.map(e=>{
-    course.findByPk(e.courseid).then(course=>{
+    course.findByPk(e).then(course=>{
          coursename = course.coursename;
     }).catch(err=>{
         err.statusCode = 500;
         err.message = "error occured";
         next(err);
     });
-    studentcourse.create({coursename:coursename,courseCourseid:e.courseid,studentUsername:req.body.username,semester:req.body.semester}).then(r=>{
+    studentcourse.create({coursename:coursename,courseCourseid:e,studentUsername:req.body.username,semester:req.body.semester}).then(r=>{
         res.status(200).send();
     }).catch(err=>{
         err.statusCode = 500;
