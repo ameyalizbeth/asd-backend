@@ -103,7 +103,7 @@ courses.map(e=>{
         err.message = "error occured";
         next(err);
     });
-    studentcourse.create({coursename:coursename,courseCourseid:e.courseid}).then(r=>{
+    studentcourse.create({coursename:coursename,courseCourseid:e.courseid,studentUsername:req.body.username,semester:req.body.semester}).then(r=>{
         res.status(200).send();
     }).catch(err=>{
         err.statusCode = 500;
