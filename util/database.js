@@ -1,4 +1,4 @@
 const Sequelize = require('sequelize');
-const sequelize = new Sequelize('heroku_03d8274e8f9bdb1','bf018a30bc2b87','8ac61902',{dialect:'mysql',host:'us-cdbr-east-02.cleardb.com'});
+const sequelize = new Sequelize('heroku_aa73693d3864546','b906c041afc338','a9af9688',{dialect:'mysql',host:'us-cdbr-east-03.cleardb.com'});
 
 module.exports=sequelize;
