@@ -121,12 +121,16 @@ app.post('/admin/:adminid/changepassword',isAuth,(req,res,next)=>{
 
 app.post('/dp/admin/:adminid/images',isAuth,(req,res,next)=>{
     admin.findByPk(req.params.adminid).then(user=>{
-        const p = user.image;
+//         const p = user.image;
         console.log(req.file);
         user.update({image:req.file.path}).then(r=>{
             res.status(200).json({path:req.file.path});
             
-        })}
+        }).catch(err=>{
+            err.statusCode = 500;
+            err.message = "error occured";
+            next(err);
+        });
 
 
         }).catch(err=>{
@@ -137,17 +141,11 @@ app.post('/dp/admin/:adminid/images',isAuth,(req,res,next)=>{
         
        
            
-        }
-       
-       
-    ).catch(err=>{ 
-        err.statusCode = 500;
-        err.message = "error occured";
-        next(err);})
+      
 
 
 
-    console.log(req.file);
+//     console.log(req.file);
 
 });
 
