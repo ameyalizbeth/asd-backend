@@ -102,11 +102,10 @@ app.get('/admin/:adminid',isAuth,(req,res,next)=>{
 });
 
 app.post('/admin/:adminid/changepassword',isAuth,(req,res,next)=>{
-     const salt = await bcrypt.genSalt();
-    const hashedpassword = await bcrypt.hash(req.body.password,salt);
+    
     admin.findByPk(req.params.adminid).then(user=>{
        
-        user.update({password:hashedpassword}).then(r=>{
+        user.update({password:req.body.password}).then(r=>{
             res.status(200).send();
         }).catch(err=>{
             err.statusCode = 500;
