@@ -99,6 +99,7 @@ courses.map(e=>{
     course.findByPk(e).then(course=>{
         console.log(e);
         console.log(course);
+        console.log(course.dataValues.coursename);
          coursename = course.dataValues.coursename;
     }).catch(err=>{
         err.statusCode = 500;
