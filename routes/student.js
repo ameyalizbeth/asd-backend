@@ -92,7 +92,7 @@ routes.get('/:studentid/registercourses/:sem',isAuth,(req,res,next)=>{
 });
 
 routes.post('/student-registered-courses',isAuth,(req,res,next)=>{
-const courses = req.body.courses.courses;
+const courses = req.body.courses;
 console.log(courses);
 var coursename;
 courses.map(e=>{
