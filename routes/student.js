@@ -75,7 +75,7 @@ routes.get('/:studentid/registercourses/:sem',isAuth,(req,res,next)=>{
 
         }
         else{
-            studcourse.map(e=>{scourse,push(e.dataValues);})
+            studcourse.map(e=>{scourse.push(e.dataValues);})
             res.status(200).json({scourse:scourse});
 
 
