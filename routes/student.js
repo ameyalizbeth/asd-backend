@@ -101,18 +101,19 @@ courses.map(e=>{
         console.log(course);
         console.log(course.dataValues.coursename);
          coursename = course.dataValues.coursename;
-    }).catch(err=>{
-        err.statusCode = 500;
-        err.message = "error occured";
-        next(err);
-    });
-    studentcourse.create({coursename:coursename,courseCourseid:e,studentUsername:req.body.username,semester:req.body.semester}).then(r=>{
+         studentcourse.create({coursename:coursename,courseCourseid:e,studentUsername:req.body.username,semester:req.body.semester}).then(r=>{
         res.status(200).send();
     }).catch(err=>{
         err.statusCode = 500;
         err.message = "error occured";
         next(err);
     });
+    }).catch(err=>{
+        err.statusCode = 500;
+        err.message = "error occured";
+        next(err);
+    });
+   
 });
 
 
