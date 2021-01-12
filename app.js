@@ -125,10 +125,7 @@ app.post('/dp/admin/:adminid/images',isAuth,(req,res,next)=>{
         console.log(req.file);
         user.update({image:req.file.path}).then(r=>{
             res.status(200).json({path:req.file.path});
-            if(p){
-            fs.unlink(p,function (err){
-                if(err) throw err;
-                console.log('file deleted');
+            
         })}
 
 
