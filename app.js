@@ -132,7 +132,7 @@ app.use('/images',express.static(path.join(__dirname,'images')));
 // app.use('/images',express.static(path.join(__dirname,'results')));
 app.use('/result',multer({storage:storage,fileFilter:excelFilter}).single('resultdata'));
 app.use('/dp',multer({storage:filestorage,fileFilter:fileFilter}).single('data'));
-// admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE01',password:'sreelal'}).then(r=>console.log(r)).catch(err=>console.log(err));
+admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE01',password:'sreelal'}).then(r=>console.log(r)).catch(err=>console.log(err));
 
 app.use(function(req,res,next){
     res.header("Access-Control-Allow-Origin","*");
