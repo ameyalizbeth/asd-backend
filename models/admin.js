@@ -2,7 +2,6 @@ const Sequelize = require('sequelize');
 const sequelize = require('../util/database');
 
 
-
 const admin = sequelize.define('admin',{
     username: {
         type: Sequelize.STRING,
@@ -15,17 +14,29 @@ const admin = sequelize.define('admin',{
         type:Sequelize.STRING,
         allowNull:false
     },
+    dob:{
+        type:Sequelize.DATEONLY,
+
+
+    },
+    department:{
+        type:Sequelize.STRING,
+    },
+    phone:{
+        type:Sequelize.STRING,
+    },
     email: {
-        type:Sequelize.STRING
+        type:Sequelize.STRING,
 
     },
     name: {
-        type:Sequelize.STRING
+        type:Sequelize.STRING,
     },
-    image: {
+    image:{
         type:Sequelize.STRING
     }
 });
+
 
 module.exports=admin;
 
