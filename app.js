@@ -1,3 +1,4 @@
+
 const express= require('express');
 const fs= require('fs');
 const path= require('path');
@@ -16,6 +17,48 @@ const notification = require('./models/notification');
 const multer = require('multer');
 const readXlsxFile = require("read-excel-file/node");
 const bcrypt = require('bcrypt');
+const certificate = require('./models/certificates');
+
+
+var Storagecerti = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'certificates');
+    },
+    filename: function (req, file, cb) {
+      cb(null, new Date().toISOString().replace(/:/g,'-')+'-'+file.originalname);
+    }
+  });
+  const fileFiltercerti=(req,file,cb)=>{
+    console.log("yess");
+    console.log(file);
+    if(file.mimetype == 'application/pdf'){
+        cb(null,true);
+    }
+    else{
+        cb(null,false);
+    }
+
+}
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 const filestorage = multer.diskStorage({
@@ -71,15 +114,25 @@ studentcourse.belongsTo(student,{constraints:true,onDelete:'CASCADE'});
 studentcourse.belongsTo(course,{constraints:true,onDelete:'CASCADE'});
 
 
+
+student.hasMany(certificate);
+certificate.belongsTo(student,{constraints:true,onDelete:'CASCADE'});
+
 const studentroutes = require('./routes/student');
 // app.use(bodyparser.urlencoded({extended:true}));
 
 app.use(bodyparser.json());
+
+
+
+app.use('/certi',multer({storage:Storagecerti,fileFilter:fileFiltercerti}).single('certificatedata'));
+app.use('/certificates',express.static(path.join(__dirname,'certificates')));
+
 app.use('/images',express.static(path.join(__dirname,'images')));
 // app.use('/images',express.static(path.join(__dirname,'results')));
 app.use('/result',multer({storage:storage,fileFilter:excelFilter}).single('resultdata'));
 app.use('/dp',multer({storage:filestorage,fileFilter:fileFilter}).single('data'));
-admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE01',password:'sreelal'}).then(r=>console.log(r)).catch(err=>console.log(err));
+// admin.create({email:'sreelal@gmail.com',name:'sreelal',username:'TVE01',password:'sreelal'}).then(r=>console.log(r)).catch(err=>console.log(err));
 
 app.use(function(req,res,next){
     res.header("Access-Control-Allow-Origin","*");
@@ -101,10 +154,30 @@ app.get('/admin/:adminid',isAuth,(req,res,next)=>{
 
 });
 
-app.post('/admin/:adminid/changepassword',isAuth,(req,res,next)=>{
-    
+
+
+
+app.post('/admin/:adminid/update',isAuth,(req,res,next)=>{
     admin.findByPk(req.params.adminid).then(user=>{
-       
+        user.update({name:req.body.name,email:req.body.email,department:req.body.department,dob:req.body.dob,phone:req.body.phone}).then(r=>{
+            console.log("sucess");
+        }).catch(err=>{
+            err.statusCode = 500;
+        err.message = "error occured";
+        next(err);
+        })
+    }).catch(err=>{
+        err.statusCode = 500;
+        err.message = "error occured";
+        next(err);
+    })
+})
+
+
+
+app.post('/admin/:adminid/changepassword',isAuth,(req,res,next)=>{
+    admin.findByPk(req.params.adminid).then(user=>{
+        console.log(req.body.password);
         user.update({password:req.body.password}).then(r=>{
             res.status(200).send();
         }).catch(err=>{
@@ -121,16 +194,15 @@ app.post('/admin/:adminid/changepassword',isAuth,(req,res,next)=>{
 
 app.post('/dp/admin/:adminid/images',isAuth,(req,res,next)=>{
     admin.findByPk(req.params.adminid).then(user=>{
-//         const p = user.image;
+        const p = user.image;
         console.log(req.file);
         user.update({image:req.file.path}).then(r=>{
             res.status(200).json({path:req.file.path});
-            
-        }).catch(err=>{
-            err.statusCode = 500;
-            err.message = "error occured";
-            next(err);
-        });
+//             if(p){
+//             fs.unlink(p,function (err){
+//                 if(err) throw err;
+//                 console.log('file deleted');
+//         })}
 
 
         }).catch(err=>{
@@ -141,11 +213,17 @@ app.post('/dp/admin/:adminid/images',isAuth,(req,res,next)=>{
         
        
            
-      
+        }
+       
+       
+    ).catch(err=>{ 
+        err.statusCode = 500;
+        err.message = "error occured";
+        next(err);})
 
 
 
-//     console.log(req.file);
+    console.log(req.file);
 
 });
 
@@ -153,11 +231,16 @@ app.post('/dp/admin/:adminid/images',isAuth,(req,res,next)=>{
 
 app.post('/dp/student/:studentid/images',isAuth,(req,res,next)=>{
     student.findByPk(req.params.studentid).then(user=>{
-//         const p = user.image;
+        const p = user.image;
+        console.log(p);
         console.log(req.file);
         user.update({image:req.file.path}).then(r=>{
             res.status(200).json({path:req.file.path});
-            
+//             if(p){
+//             fs.unlink(p,function (err){
+//                 if(err) throw err;
+//                 console.log('file deleted');
+//         })}
 
 
         }).catch(err=>{
@@ -184,7 +267,8 @@ app.post('/dp/student/:studentid/images',isAuth,(req,res,next)=>{
 
 app.post('/result/admin/:adminid/results',isAuth,async(req,res,next)=>{
     try{
-        console.log(req.body.year);
+        console.log(req.file);
+        console.log(req.body);
         if (req.file == undefined) {
                 return res.status(400).send("Please upload an excel file!");
             }
@@ -533,7 +617,7 @@ app.post('/registercourses',isAuth,(req,res,next)=>{
     if(req.body.currentuser === req.userid){
     course.create({courseid:courseid,coursename:coursename,credit:credit,staff:staff,semester:semester}).then(r=>res.status(200).json({message:"registered succesfully"})).catch(err=>{
       err.statusCode = 403;
-      err.message = "student already registered";
+      err.message = "course already registered";
       next(err);
     })}
     else{
@@ -562,7 +646,7 @@ app.post('/login',(req,res,next)=>{
 
                    },
                    'somesupersecretsecre',
-                   {expiresIn:'2h'});
+                   {expiresIn:'4h'});
                
              res.status(200).json({token:token,userid:loadeduser.username,status:status});
 
@@ -633,7 +717,7 @@ notification.create({header:req.body.header,body:req.body.body,adminUsername:req
 });
 app.get('/notification',isAuth,(req,res,next)=>{
     const notifications = [];
-    notification.findAll({where:{adminUsername:req.userid}})
+    notification.findAll()
     .then(notification=>{
         console.log(notification)
         notification.map(e=>{
@@ -699,6 +783,166 @@ app.get('/notification',isAuth,(req,res,next)=>{
        
         });
 
+
+
+
+
+        app.post("/certi/student/:studentid/uploadcertificates",isAuth,(req,res,next)=>{
+            console.log(req.file);
+            console.log(req.body.title);
+            if(!req.file){
+              res.sendStatus(422);
+            }
+            else if (req.userid===req.params.studentid){
+              certificate.create({username:req.userid,title:req.body.title,category:req.body.category,filepath:req.file.path});
+              res.sendStatus(200);
+            }
+           else
+           res.sendStatus(401);
+            
+            
+            
+          });
+
+
+
+
+          app.get("/certificates/admin/:adminid/:studentid/viewcertificates",isAuth,(req,res,next)=>{
+  
+            const certificates=[];
+          
+            if (req.userid===req.params.adminid){
+              
+              certificate.findAll({where:{username:req.params.studentid}}).then(result=>{
+                
+                result.map(e=>{
+                  certificates.push(e.dataValues);
+                })
+               
+                // res.status(200).json({certificates});
+                res.status(200).json(certificates);
+              }).catch(err=>console.log(err));
+              
+          
+            }
+           else
+           res.sendStatus(401);
+            
+            
+            
+          })
+        
+        
+        
+          app.get("/certificates/admin/:adminid/:studentid/viewcertificates/:certificateid",isAuth,(req,res,next)=>{
+          
+          
+            console.log("individual certificate route reached");
+            console.log(req.params.certificateid);
+            let filep="";
+            if (req.userid===req.params.adminid){
+                 certificate.findByPk(req.params.certificateid).then(result=>{
+                  //  res.status(200).json({link:result.filepath});
+                  filep=result.filepath;
+                  // filep="http://localhost:9000/" + filep;
+                  console.log(filep);
+                  
+                  res.status(200).json({link:`http://localhost:8000/${filep}`});
+                 }).catch(err=>console.log(err));
+            }
+            else
+              res.sendStatus(401);
+              
+          
+            
+            
+            
+          })
+        
+
+
+
+
+
+          app.get("/certificates/student/:studentid/viewcertificates",isAuth,(req,res,next)=>{
+  
+            const certificates=[];
+          
+            if (req.userid===req.params.studentid){
+              
+              certificate.findAll({where:{username:req.params.studentid}}).then(result=>{
+                
+                result.map(e=>{
+                  certificates.push(e.dataValues);
+                })
+               
+                // res.status(200).json({certificates});
+                res.status(200).json(certificates);
+              }).catch(err=>console.log(err));
+              
+          
+            }
+           else
+           res.sendStatus(401);
+            
+            
+            
+          })
+        
+        
+        
+          app.get("/certificates/student/:studentid/viewcertificates/:certificateid",isAuth,(req,res,next)=>{
+          
+          
+            console.log("individual certificate route reached");
+            console.log(req.params.certificateid);
+            let filep="";
+            if (req.userid===req.params.studentid){
+                 certificate.findByPk(req.params.certificateid).then(result=>{
+                  //  res.status(200).json({link:result.filepath});
+                  filep=result.filepath;
+                  // filep="http://localhost:9000/" + filep;
+                  console.log(filep);
+                  
+                  res.status(200).json({link:`http://localhost:8000/${filep}`});
+                 }).catch(err=>console.log(err));
+            }
+            else
+              res.sendStatus(401);
+              
+          
+            
+            
+            
+          })
+app.post('/admin/:adminid/:studentid/updatecertificate/:certificateid',isAuth,(req,res,next)=>{
+    if(req.userid === req.params.adminid){
+        certificate.findByPk(req.params.certificateid)
+        .then(r=>{
+            r.update({points:req.body.points,comments:req.body.comments}).then(r=>{
+                res.sendStatus(200);
+                console.log("succes");
+            }).catch(err=>{
+                err.statusCode = 500;
+                err.message = "error occured";
+                next(err);
+        
+            })
+        })
+        .catch(err=>{
+            err.statusCode = 500;
+            err.message = "error occured";
+            next(err);
+    
+        });
+
+    }
+    else{
+        
+        res.sendStatus(401);
+    }
+})
+
 app.use((error,req,res,next)=>{
     console.log(error);
     const status = error.statusCode || 500;
@@ -706,6 +950,10 @@ app.use((error,req,res,next)=>{
     res.status(status).send();
     console.log(status);
 });
+
+
+
+
 sequelize.sync().then(r=>{
     // console.log(r);
     app.listen(process.env.PORT || 3000);
