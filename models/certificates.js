@@ -1,8 +1,6 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../util/database');
 
-
-
 const certificates = sequelize.define('certificate',{
     id: {
         type: Sequelize.INTEGER,
@@ -35,7 +33,13 @@ const certificates = sequelize.define('certificate',{
     category:{
         type:Sequelize.STRING,
         allowNull:false
+    },
+    filepath:{
+        type:Sequelize.STRING,
+        allowNull:false
     }
 });
+
+
 
 module.exports=certificates;
