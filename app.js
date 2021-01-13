@@ -147,7 +147,7 @@ app.use('/student',studentroutes);
 app.get('/admin/:adminid',isAuth,(req,res,next)=>{
 
     admin.findByPk(req.params.adminid).then(user=>{
-        res.status(200).json({name:user.name,email:user.email,path:user.image});
+        res.status(200).json({name:user.name,email:user.email,path:user.image,phone:user.phone,department:user.department,dob:user.dob});
     }).catch(err=>{ err.statusCode = 500;
         err.message = "error occured";
         next(err);})
