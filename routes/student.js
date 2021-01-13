@@ -3,9 +3,9 @@ const isAuth = require('../middleware/is-auth');
 const student = require('../models/student');
 const studentcourse = require('../models/student-course');
 const course = require('../models/course');
+const result = require('../models/result');
 const routes = express.Router();
-const bcrypt = require('bcrypt');
-
+const certificate = require('../models/certificates')
 
 
 routes.get('/:studentid',isAuth,(req,res,next)=>{
@@ -21,9 +21,23 @@ routes.get('/:studentid',isAuth,(req,res,next)=>{
 
 });
 
-routes.post('/:studentid/changepassword',isAuth,async(req,res,next)=>{
-     const salt = await bcrypt.genSalt();
-    const hashedpassword = await bcrypt.hash(req.body.password,salt);
+routes.post('/:studentid/update',isAuth,(req,res,next)=>{
+    student.findByPk(req.params.studentid).then(user=>{
+        user.update({name:req.body.name,email:req.body.email,department:req.body.department,currentsem:req.body.semester,dob:req.body.dob,phone:req.body.phone}).then(r=>{
+            console.log("sucess");
+        }).catch(err=>{
+            err.statusCode = 500;
+        err.message = "error occured";
+        next(err);
+        })
+    }).catch(err=>{
+        err.statusCode = 500;
+        err.message = "error occured";
+        next(err);
+    })
+})
+
+routes.post('/:studentid/changepassword',isAuth,(req,res,next)=>{
     student.findByPk(req.params.studentid).then(user=>{
         user.update({password:req.body.password}).then(r=>{
             res.status(200).send();
@@ -38,9 +52,9 @@ routes.post('/:studentid/changepassword',isAuth,async(req,res,next)=>{
         next(err);
     })
 })
-routes.get('/:studentid/results/:sem',isAuth,(req,res,next)=>{
+routes.post('/:studentid/results',isAuth,(req,res,next)=>{
    const  results=[];
-    result.findAll({where:{username:req.params.studentid,semester:req.params.sem}}).then(r=>{
+    result.findAll({where:{username:req.params.studentid,semester:req.body.sem}}).then(r=>{
         // console.log(r);
         r.map(e=>{
             results.push(e.dataValues);
@@ -92,32 +106,38 @@ routes.get('/:studentid/registercourses/:sem',isAuth,(req,res,next)=>{
 });
 
 routes.post('/student-registered-courses',isAuth,(req,res,next)=>{
-const courses = req.body.courses;
-console.log(courses);
-var coursename;
-courses.map(e=>{
-    course.findByPk(e).then(course=>{
-        console.log(e);
-        console.log(course);
-        console.log(course.dataValues.coursename);
-         coursename = course.dataValues.coursename;
-         studentcourse.create({coursename:coursename,courseCourseid:e,studentUsername:req.body.username,semester:req.body.semester}).then(r=>{
-        res.status(200).send();
-    }).catch(err=>{
-        err.statusCode = 500;
-        err.message = "error occured";
-        next(err);
+    const courses = req.body.courses;
+    console.log(courses);
+    var coursename;
+    courses.map(e=>{
+        course.findByPk(e).then(course=>{
+            console.log(e);
+            console.log(course);
+            console.log(course.dataValues.coursename);
+             coursename = course.dataValues.coursename;
+             studentcourse.create({coursename:coursename,courseCourseid:e,studentUsername:req.body.username,semester:req.body.semester}).then(r=>{
+            res.status(200).send();
+        }).catch(err=>{
+            err.statusCode = 500;
+            err.message = "error occured";
+            next(err);
+        });
+        }).catch(err=>{
+            err.statusCode = 500;
+            err.message = "error occured";
+            next(err);
+        });
+       
     });
-    }).catch(err=>{
-        err.statusCode = 500;
-        err.message = "error occured";
-        next(err);
+    
+    
     });
-   
-});
 
 
-});
 
 
+
+
+
+  
 module.exports= routes;
