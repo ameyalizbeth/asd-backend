@@ -11,7 +11,7 @@ const certificate = require('../models/certificates')
 routes.get('/:studentid',isAuth,(req,res,next)=>{
 
     student.findByPk(req.params.studentid).then(user=>{
-        res.status(200).json({name:user.name,email:user.email});
+        res.status(200).json({name:user.name,email:user.email,currentsem:user.currentsem,department:user.department,phone:user.phone,dob:user.dob,path:user.image});
     }).catch(err=>{
         err.statusCode = 500;
         err.message = "error occured";
