@@ -6,6 +6,7 @@ const course = require('../models/course');
 const result = require('../models/result');
 const routes = express.Router();
 const certificate = require('../models/certificates')
+const bcrypt = require('bcrypt');
 
 
 routes.get('/:studentid',isAuth,(req,res,next)=>{
