@@ -27,7 +27,7 @@ const student = sequelize.define('student',{
 
     },
     dob:{
-        type:Sequelize.DATE
+        type:Sequelize.DATEONLY
 
 
     },
