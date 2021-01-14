@@ -740,6 +740,7 @@ app.get('/notification',(req,res,next)=>{
         
         
       notification.count().then(r=>{
+          console.log(r);
         if(r>5){
             notification.findAll({where:{id:{
                 [Op.in]:[r,r-1,r-2,r-3,r-4]
