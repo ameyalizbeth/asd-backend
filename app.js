@@ -706,7 +706,7 @@ app.post('/login',(req,res,next)=>{
     // res.send(`hello${username}`);
 });
 
-app.post('/notification',(req,res,next)=>{
+app.post('/notification',isAuth,(req,res,next)=>{
 notification.create({header:req.body.header,body:req.body.body,adminUsername:req.userid}).then(r=>{
     console.log(r);
     res.status(200).send();
@@ -715,7 +715,7 @@ notification.create({header:req.body.header,body:req.body.body,adminUsername:req
     next(err);})
 
 });
-app.get('/notification',isAuth,(req,res,next)=>{
+app.get('/notification',(req,res,next)=>{
     const notifications = [];
     notification.findAll()
     .then(notification=>{
