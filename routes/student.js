@@ -37,9 +37,11 @@ routes.post('/:studentid/update',isAuth,(req,res,next)=>{
     })
 })
 
-routes.post('/:studentid/changepassword',isAuth,(req,res,next)=>{
+routes.post('/:studentid/changepassword',isAuth,async(req,res,next)=>{
+    const salt = await bcrypt.genSalt();
+    const hashedpassword = await bcrypt.hash(req.body.password,salt);
     student.findByPk(req.params.studentid).then(user=>{
-        user.update({password:req.body.password}).then(r=>{
+        user.update({password:hashedpassword}).then(r=>{
             res.status(200).send();
         }).catch(err=>{
             err.statusCode = 500;
