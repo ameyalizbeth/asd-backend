@@ -847,7 +847,7 @@ app.get('/notification',isAuth,(req,res,next)=>{
                   // filep="http://localhost:9000/" + filep;
                   console.log(filep);
                   
-                  res.status(200).json({link:`http://localhost:8000/${filep}`});
+                  res.status(200).json({link:`https://student-info-backend.herokuapp.com/${filep}`});
                  }).catch(err=>console.log(err));
             }
             else
@@ -904,7 +904,7 @@ app.get('/notification',isAuth,(req,res,next)=>{
                   // filep="http://localhost:9000/" + filep;
                   console.log(filep);
                   
-                  res.status(200).json({link:`http://localhost:8000/${filep}`});
+                  res.status(200).json({link:`https://student-info-backend.herokuapp.com/${filep}`});
                  }).catch(err=>console.log(err));
             }
             else
